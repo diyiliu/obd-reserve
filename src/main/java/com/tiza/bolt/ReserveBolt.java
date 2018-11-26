@@ -73,14 +73,14 @@ public class ReserveBolt extends BaseRichBolt {
         // 刷新缓存
         if (tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID)) {
             sendMap.clear();
-            log.info("发送指令 ... ");
             List<ReserveMsg> msgList = ReserveMsgDao.freshReserve();
+            log.info("发送指令, 队列长度[{}] ... ", msgList.size());
 
             for (ReserveMsg msg : msgList) {
                 String device = msg.getDeviceId();
                 if (onlineMap.containsKey(device)) {
                     long time = onlineMap.get(device);
-                    if (System.currentTimeMillis() - time < 1000 * 3) {
+                    if (System.currentTimeMillis() - time < 3 * 60 * 1000) {
                         try {
                             sendToGw(msg);
                         } catch (Exception e) {
@@ -108,7 +108,7 @@ public class ReserveBolt extends BaseRichBolt {
                 if (sendMap.containsKey(device)) {
                     ReserveMsg msg = sendMap.get(device);
                     long sendTime = msg.getSendTime().getTime();
-                    if (time - sendTime < 1000 * 2) {
+                    if (time - sendTime < 2 * 60 * 1000) {
 
                         String content = (String) data.get("data");
                         if (content.length() != 30) {
